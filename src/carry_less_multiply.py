@@ -13,15 +13,15 @@ def carry_less_multiply(a, b) -> int:
     return acc
 
 
-def carry_less_divide(a, d) -> int:
-    """ Carry-less division of dividend a by divisor b, return the quotient """
+def carry_less_divrem(a, d) -> int:
+    """ Carry-less division of dividend a by divisor d, return the quotient and the remainder """
     if d == 0:
-        return None
+        return (None, a)
     lop_a = lop(a)
     lop_d = lop(d)
     # if the degree of the divisor stricly exceeds the degree of the dividend, the quotient is 0
     if lop_d > lop_a:
-        return 0
+        return (0, a)
     lop_delta = lop_a - lop_d
     remainder = a
     current_divisor = d << lop_delta
@@ -33,8 +33,17 @@ def carry_less_divide(a, d) -> int:
             quotient |= 1
             remainder ^= current_divisor
         remainder <<= 1
+    remainder >>= (lop_delta + 1)
+    assert remainder == 0 or (lop(remainder) < lop_d)
+    return quotient, remainder
+
+def carry_less_divide(a, d) -> int:
+    """ Carry-less division of dividend a by divisor d, return the quotient """
+    quotient, _ = carry_less_divrem(a, d)
     return quotient
 
-
 def carry_less_remainder(a, d) -> int:
-    pass
+    """ Carry-less division of dividend a by divisor d, return the remainder """
+    _, remainder = carry_less_divrem(a, d)
+    return remainder
+    
