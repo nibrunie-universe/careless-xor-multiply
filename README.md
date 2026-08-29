@@ -1,6 +1,6 @@
 # Careless XOR Multiply
 
-A Python library for performing carry-less arithmetic operations (such as carry-less multiplication, division, and remainder) and bit-level manipulation utilities over GF(2).
+Careless Xor Multiply (a.k.a. **cxm**) is a Python library for performing carry-less arithmetic operations (such as carry-less multiplication, division, and remainder) and bit-level manipulation utilities over GF(2).
 
 ## Features
 - **Bit Manipulation:** Utilities for bit reversal, byte splitting, leading zero count (`lzc`), and leading one position (`lop`).
