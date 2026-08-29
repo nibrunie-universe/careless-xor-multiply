@@ -30,3 +30,15 @@ def lzc(data: int, n: int) -> int:
         _data >>= 1
     return count
 
+def lop(data: int) -> int:
+    """ Leading one position (bit index) for the most significant bit of data """
+    if data == 0:
+        return None
+    _data = data
+    index = -1
+    while _data != 0:
+        index += 1
+        _data >>= 1
+    return index
+    
+

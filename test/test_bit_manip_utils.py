@@ -1,4 +1,4 @@
-from bit_manip_utils import bit_reverse, byte_split, lzc
+from bit_manip_utils import bit_reverse, byte_split, lzc, lop
 
 def test_bit_reverse():
     assert bit_reverse(0b1010, 4) == 0b0101
@@ -16,3 +16,10 @@ def test_lzc():
     assert lzc(0, 17) == 17
     assert lzc(3, 3) == 1
     assert lzc (8, 5) == 1 
+
+def test_lop():
+    assert lop(0) == None
+    assert lop(1) == 0
+    assert lop(2) == 1
+    assert lop(4096) == 12
+    assert lop(127) == 6
