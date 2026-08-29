@@ -1,4 +1,4 @@
-
+# This file contains a set of utility functions to manipulate value at the bit level (reversal, split)
 
 
 def bit_reverse(_data: int, size: int) -> int:
@@ -20,4 +20,13 @@ def byte_split(_data: int) -> list[int]:
         byte_list.append(data & 0xff)
         data >>= 8
     return byte_list
+
+def lzc(data: int, n: int) -> int:
+    """ Leading zero count of the lowest n bits of data """
+    _data = bit_reverse(data, n)
+    count = 0
+    while _data & 1 == 0 and count < n:
+        count += 1
+        _data >>= 1
+    return count
 
