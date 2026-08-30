@@ -1,3 +1,4 @@
+from bit_manip_utils import bit_reverse
 from bit_manip_utils import byte_assemble
 from crc_model import CRC32_POLY_BE, crc32_be
 from carry_less_multiply import carry_less_divide, carry_less_multiply
@@ -19,14 +20,15 @@ def crc32_be_clmul(data: int) -> int:
     # One thing to note is that both operands fit on 32-bit
     data_times_crc32_be_inv = carry_less_multiply(data, CRC32_BE_INV)
     quotient = data_times_crc32_be_inv >> 31
+    print(f"q({hex(data)}) = {hex(quotient)} / rev32(q) = {hex(bit_reverse(quotient, 32))}")
     crc32_be_full_poly = (1 << 32) | CRC32_POLY_BE
     # One of the issue with the following carry-less multiply is that the right
     # hand side operand (crc32_be_full_poly) is more than 32-bit wide
     # it can be decomposed into X^32 ^ CRC32_POLY_BE
     # and the multiplication becomes
     #     quotient . crc32_be_full_poly = quotient . (X^32 ^ CRC32_POLY_BE)
-    #                                    = quotient . X^32 ^ quotient . CRC32_POLY_BE
-    #                                    = (quotient << 32) ^ (quotient . CRC32_POLY_BE)
+    #                                   = quotient . X^32 ^ quotient . CRC32_POLY_BE
+    #                                   = (quotient << 32) ^ (quotient . CRC32_POLY_BE)
     # where quotient . CRC32_POLY_BE is a polynomial of degree 31 + 31 = 62
     # quotient.X^32 has the property to cancel the MSB (bit 63) of the product
     # Since we know the cancellation to be exact, we can actually limit the computation
@@ -38,6 +40,10 @@ def crc32_be_clmul(data: int) -> int:
     assert remainder < 2**32
     assert remainder == remainder_opt
     return remainder_opt
+
+
+    
+
 
 
 if __name__ == "__main__":
