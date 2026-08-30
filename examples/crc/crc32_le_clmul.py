@@ -55,7 +55,6 @@ def crc32_le_clmul_generic(rev_data: int, poly_le: int) -> int:
     # rev32(data) . CRC32_BE_INV_REV  = (rev32(Q)) ^ (rev31(R31) << 32)
     # rev32(Q) corresponds to the least 32 bits of rev32(data) . CRC32_BE_INV_REV
     rev32_q = carry_less_multiply(rev_data, poly_inv_rev) & 0xffffffff
-    print(f"rev32_q({hex(rev_data)}) = {hex(rev32_q)}")
 
     # computing the remainder
     #    rev64(data.X^32) = rev64(Q*P ^ crc)
@@ -93,11 +92,9 @@ def crc32c_clmul(rev_data: int) -> int:
     remainder_opt = rev32_q ^ (carry_less_multiply(rev32_q, p_prime) >> 32)
     # and now the carry-less part directly corresponds to the upper 32-bit part of
     # a possibly 64-bit carry-less
-
     assert remainder_rev == remainder_opt
 
     return remainder_opt
-    
 
 
 if __name__ == "__main__":
