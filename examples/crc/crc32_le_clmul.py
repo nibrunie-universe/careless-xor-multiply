@@ -19,10 +19,14 @@ def crc32_le_clmul(rev_data: int) -> int:
     #
     # For CRC32LE, the polynomial P is bit reversed, and so is the final CRC
     # rev64 stands for 64-bit bit reverse
+    #    P = (1 << 32) ^ CRC32_POLY_BE
     #    rev64(data.X^32) = rev64(Q*P ^ crc)
     #    rev32(data) = rev64(Q.P) ^ (rev32(crc) << 32)
     #
-    #    rev64(Q.P) = (rev32(Q).rev32(P)) << 1
+    #    rev64(Q.P) = rev64(Q . (X^ 32 ^ CRC32_POLY_BE))
+    #               = rev64(Q.X^32 ^ Q.CRC32_POLY_BE)
+    #               = rev64(Q.X^32) ^ rev64(Q.CRC32_POLY_BE)
+    #               = rev32(Q) ^ ((rev32(Q).CRC32_POLY_LE) << 1)
     #
     #    rev32(Q) = rev32((data . CRC32_BE_INV) >> 31) 
     #
@@ -44,10 +48,11 @@ def crc32_le_clmul(rev_data: int) -> int:
     # computing the remainder
     #    rev64(data.X^32) = rev64(Q*P ^ crc)
     #    rev32(data) = rev64(Q.P) ^ (rev32(crc) << 32)
-    #    crc is the upper 32 bits of rev64(Q.P) (since rev32(data) has no upper 32 bits)
+    #    rev32(crc) is the upper 32 bits of rev64(Q.P) (since rev32(data) has no upper 32 bits)
     #
-    #    rev64(Q.P) << 1 = rev32(Q) . rev32(P)
-    remainder_rev = carry_less_multiply(rev32_q, CRC32_BE_INV_REV) >> 33
+    #    rev64(Q.P) = rev32(Q) ^ (rev32(Q).CRC32_POLY_LE) << 1 
+    #    rev64(Q.P) >> 32 = (rev32(Q).CRC32_POLY_LE) >> 31 
+    remainder_rev = carry_less_multiply(rev32_q, CRC32_POLY_LE) >> 31
     return remainder_rev
     
 
@@ -63,26 +68,25 @@ if __name__ == "__main__":
     print(f"CRC32_BE_INV_REV = 0x{CRC32_BE_INV_REV:x}")
 
     # Single byte data
-    for data_rev in [0x08]:
+    for data_rev in [0x08, 0x80, 0x1, 0x71]:
         data_bytes_rev = [data_rev] + [0, 0, 0]
-        data_bytes = [bit_reverse(b, 8) for b in data_bytes_rev]
 
-        # CRC32 BE version
-
-        # assembling data, they byte list needs to be reversed, since the first byte the crc32_be considers
-        # is actually the one with highest index in the message
-        data = byte_assemble(data_bytes[::-1])
-        # First, we compute the reference CRC32_BE value of the single byte data
-        ref_crc32_be = crc32_be(0, data_bytes, CRC32_POLY_BE)
-        # Then, we compute the same value but using carry-less multiply with the barrett's constant
-        clmul_crc32_be = crc32_be_clmul(data)
-        print(f"crc32_be(0x{data:x} / {data_bytes}) = 0x{ref_crc32_be:x} (ref) vs 0x{clmul_crc32_be:x} (clmul)")
-        assert ref_crc32_be == clmul_crc32_be
-
-        # First, we compute the reference CRC32_BE value of the single byte data
+        # First, we compute the reference CRC32_LE value of the single byte data
         ref_crc32_le = crc32_le(0, data_bytes_rev, CRC32_POLY_LE)
         # Then, we compute the same value but using carry-less multiply with the barrett's constant
         clmul_crc32_le = crc32_le_clmul(data_rev)
         print(f"crc32_le(0x{data_rev:x} / {data_bytes_rev}) = 0x{ref_crc32_le:x} (ref) vs 0x{clmul_crc32_le:x} (clmul)")
         assert ref_crc32_le == clmul_crc32_le
 
+    random_bytes = lambda: random.randrange(256)
+
+    # Multi-byte data (4 bytes, corresponding to the CRC width)
+    for data_bytes_rev in [[0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_bytes() for _ in range(4)]]:
+        data_rev = byte_assemble(data_bytes_rev)
+
+        # First, we compute the reference CRC32_LE value of the multi byte data
+        ref_crc32_le = crc32_le(0, data_bytes_rev, CRC32_POLY_LE)
+        # Then, we compute the same value but using carry-less multiply with the barrett's constant
+        clmul_crc32_le = crc32_le_clmul(data_rev)
+        print(f"crc32_le(0x{data_rev:x} / {data_bytes_rev}) = 0x{ref_crc32_le:x} (ref) vs 0x{clmul_crc32_le:x} (clmul)")
+        assert ref_crc32_le == clmul_crc32_le
