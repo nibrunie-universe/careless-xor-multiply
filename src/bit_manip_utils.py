@@ -21,6 +21,14 @@ def byte_split(_data: int) -> list[int]:
         data >>= 8
     return byte_list
 
+def byte_assemble(byte_list: list[int]) -> int:
+    """ assemble data from a list of bytes (least significant byte first) """
+    data = 0
+    for i, byte in enumerate(byte_list):
+        data |= (byte << (i * 8))
+    return data
+    
+
 def lzc(data: int, n: int) -> int:
     """ Leading zero count of the lowest n bits of data """
     _data = bit_reverse(data, n)
