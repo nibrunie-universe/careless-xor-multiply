@@ -12,7 +12,6 @@ def crc32_le_clmul64(rev_data: int) -> int:
     assert rev_data < 2**64
     crc32_be_full_poly = (1 << 32) | CRC32_POLY_BE
     MASK_64 = 2**64 - 1
-    MASK_32 = 2**32 - 1
 
     # the quotient is too wide to be determined in a single step.
     # We start by determining the upper part, and use it to cancel its product
@@ -44,6 +43,18 @@ def crc32_le_clmul64(rev_data: int) -> int:
     #                 = rev64(data) ^ (rev128(q_msb.P) >> 64)
     #                 = rev64(data) ^ ((rev64(q_msb) . rev64(P) << 1) >> 64)
     data_lsb_rev = rev_data ^ (carry_less_multiply(q_msb_rev, bit_reverse(crc32_be_full_poly, 64)) >> 63)
+
+    # OPTIMIZATION:
+    #     The right shift by 63 following the carry-less multiply is incovenient, since it would be easier t
+    #     directly used the upper 64-bit (actually 63-bit) of a 64x64 carry-less multiply operation
+    data_lsb_rev_opt = rev_data ^ (carry_less_multiply(q_msb_rev, bit_reverse(crc32_be_full_poly >> 1, 64)) >> 64)
+    # Since (crc32_be_full_poly >> 1) may have discarded a bit which would have corresponded to q_msb_rev.X^64 after
+    # the bit-reversal, we need to compensante (if the lsb of crc32_be_full_poly is set) by xor-ing q_msb_rev once
+    # again into the upper 64-bit of the carry-less multiply result
+    data_lsb_rev_opt ^= q_msb_rev if (crc32_be_full_poly & 1) else 0 
+    assert data_lsb_rev_opt == data_lsb_rev
+
+
     # q_lsb = (data_lsb . P_INv) >> 31
     # q_lsb_opt = (data_lsb . P_INv . X^33) >> 64
     # rev64(q_lsb_opt) = rev128(data_lsb . P_INV . X^33) & MASK_64 
