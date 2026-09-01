@@ -2,7 +2,7 @@
 import random
 
 from bit_manip_utils import byte_assemble
-from carry_less_multiply import carry_less_multiply
+from carry_less_multiply import carry_less_multiply, carry_less_divide
 from crc_intro import CRC32_BE_INV, CRC32_POLY_BE, crc32_be
 
 def crc32_be_clmul64(data: int) -> int:
@@ -50,6 +50,30 @@ def crc32_be_clmul64(data: int) -> int:
 
     return remainder
 
+# P' = X^95 / P
+# such that P'.P = X^95 + R32 (with R32 of degree at most 31)
+# P being a degree 32 polynomial, P' is a degree 63 polynomial
+FULL_CRC32_POLY_BE = (1 << 32) | CRC32_POLY_BE
+CRC32_BE_INV_EXT = carry_less_divide(1 << 95, FULL_CRC32_POLY_BE)
+print(f"CRC32_BE_INV_EXT={hex(CRC32_BE_INV_EXT)}")
+
+def crc32_be_clmul64_v2(data: int) -> int:
+    assert data < 2**64
+    # M.X^32 = Q.P ^ CRC
+    # M.P'.X^32 = Q.P.P' ^ CRC
+    #           = Q.X^95 ^ Q.R32 ^C
+    # degree of Q is at most 63
+    # M.P' >> 63 = Q
+    # optimizing by splitting multiply by CRC32_BE_INV_EXT.X into
+    # a 64-bit carry-less multiply and a XOR
+    crc32_be_inv_ext_times_x_lsbs = (CRC32_BE_INV_EXT << 1) & (2**64 - 1)
+    crc32_be_inv_ext_times_x_msb = (CRC32_BE_INV_EXT >> 63)
+    assert crc32_be_inv_ext_times_x_msb < 2
+    quotient = carry_less_multiply(data, crc32_be_inv_ext_times_x_lsbs) >> 64
+    quotient ^= data if crc32_be_inv_ext_times_x_msb else 0
+    remainder = carry_less_multiply(quotient, FULL_CRC32_POLY_BE) & (2**32 - 1)
+    return remainder
+
 
 if __name__ == "__main__":
     # Single byte data
@@ -61,6 +85,10 @@ if __name__ == "__main__":
         clmul64_crc32_be = crc32_be_clmul64(data)
         print(f"crc32_be(0x{data:x} / {data_bytes}) = 0x{ref_crc32_be:x} (ref) vs 0x{clmul64_crc32_be:x} (clmul64)")
         assert ref_crc32_be == clmul64_crc32_be
+
+        clmul64_v2_crc32_be = crc32_be_clmul64_v2(data)
+        print(f"crc32_be(0x{data:x} / {data_bytes}) = 0x{ref_crc32_be:x} (ref) vs 0x{clmul64_v2_crc32_be:x} (clmul64_v2)")
+        assert ref_crc32_be == clmul64_v2_crc32_be
 
     random_bytes = lambda: random.randrange(256)
 
@@ -91,4 +119,8 @@ if __name__ == "__main__":
         clmul64_crc32_be = crc32_be_clmul64(data)
         print(f"crc32_be(0x{data:x} / {data_bytes}) = 0x{ref_crc32_be:x} (ref) vs 0x{clmul64_crc32_be:x} (clmul64)")
         assert ref_crc32_be == clmul64_crc32_be
+
+        clmul64_v2_crc32_be = crc32_be_clmul64_v2(data)
+        print(f"crc32_be(0x{data:x} / {data_bytes}) = 0x{ref_crc32_be:x} (ref) vs 0x{clmul64_v2_crc32_be:x} (clmul64_v2)")
+        assert ref_crc32_be == clmul64_v2_crc32_be
 
