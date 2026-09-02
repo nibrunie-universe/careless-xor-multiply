@@ -5,7 +5,7 @@ from bit_manip_utils import byte_assemble, bit_reverse
 from carry_less_multiply import carry_less_multiply
 from crc_model import CRC32_POLY_BE, CRC32_POLY_LE, crc32_le
 from crc_intro import CRC32_BE_INV
-from crc32_be_clmul64 import crc32_be_clmul64
+from crc32_be_clmul64 import crc32_be_clmul64, CRC32_BE_INV_EXT, FULL_CRC32_POLY_BE, crc32_be_clmul64_v2
 
 def crc32_le_clmul64(rev_data: int) -> int:
     """ carry-less multiply based implementation of crc32_be for 64-bit data """
@@ -88,14 +88,47 @@ def crc32_le_clmul64(rev_data: int) -> int:
 
     return remainder_rev
 
+# P' = X^95 / P
+# such that P'.P = X^95 + R32 (with R32 of degree at most 31)
+# P being a degree 32 polynomial, P' is a degree 63 polynomial
+# FULL_CRC32_POLY_BE = (1 << 32) | CRC32_POLY_BE
+# CRC32_BE_INV_EXT = carry_less_divide(1 << 95, FULL_CRC32_POLY_BE)
+REV_CRC32_BE_INV_EXT = bit_reverse(CRC32_BE_INV_EXT, 64)
+
+def crc32_le_clmul64_v2(rev_data: int) -> int:
+    assert rev_data < 2**64
+    # M.X^32 = Q.P ^ CRC
+    # M.P'.X^32 = Q.P.P' ^ CRC
+    #           = Q.X^95 ^ Q.R32 ^C
+    # degree of Q is at most 63
+    # M.P' >> 63 = Q
+    # rev64(Q) = rev64(M.P' >> 63)
+    #          = rev64(M.P'.X >> 64)
+    #          = rev128(M.P'.X) & MASK_64 
+    #          = (rev64(M) . rev64(P')) & MASK_64 
+    rev_q = carry_less_multiply(rev_data, REV_CRC32_BE_INV_EXT) & (2**64-1)
+    assert rev_q < 2**64
+    # rev64(CRC) = rev64(M ^ LO(Q.P))
+    #            = rev64(M) ^ rev64(LO(Q.P))
+    #            = rev64(M) ^ (rev128(Q.P) >> 64)
+    #            = rev64(M) ^ ((rev64(Q) . rev64(P.X)) >> 64)
+    remainder = carry_less_multiply(rev_q, bit_reverse(FULL_CRC32_POLY_BE << 31, 64)) >> 64
+    assert remainder < 2**32
+    return remainder
+
+
 
 if __name__ == "__main__":
     # Single byte data
     for data in [0xdeadbeefcafebebe]:
         clmul64_crc32_be = crc32_be_clmul64(data)
         clmul64_crc32_le = crc32_le_clmul64(bit_reverse(data, 64))
+        clmul64_v2_crc32_be = crc32_be_clmul64_v2(data)
+        clmul64_v2_crc32_le = crc32_le_clmul64_v2(bit_reverse(data, 64))
 
         assert clmul64_crc32_be == bit_reverse(clmul64_crc32_le, 32)
+        assert clmul64_crc32_le == clmul64_v2_crc32_le
+
 
     random_bytes = lambda: random.randrange(256)
 
@@ -113,3 +146,7 @@ if __name__ == "__main__":
         clmul64_crc32_le = crc32_le_clmul64(data)
         print(f"crc32_le(0x{data:x} / {data_bytes}) = 0x{ref_crc32_le:x} (ref) vs 0x{clmul64_crc32_le:x} (clmul64)")
         assert ref_crc32_le == clmul64_crc32_le
+        
+        clmul64_v2_crc32_le = crc32_le_clmul64_v2(data)
+        print(f"crc32_le(0x{data:x} / {data_bytes}) = 0x{ref_crc32_le:x} (ref) vs 0x{clmul64_v2_crc32_le:x} (clmul64_v2)")
+        assert ref_crc32_le == clmul64_v2_crc32_le
