@@ -2,7 +2,7 @@ from bit_manip_utils import byte_split
 from crc_model import CRC32C_POLY_LE
 from carry_less_multiply import carry_less_multiply, carry_less_divide
 import random
-from test_utils import random_byte, random_bytes
+from test_utils import random_bytes
 
 from bit_manip_utils import bit_reverse, byte_assemble
 from crc_model import CRC32_POLY_LE, crc32_le, crc32c, CRC32C_POLY_LE

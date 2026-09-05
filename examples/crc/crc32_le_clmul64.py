@@ -1,6 +1,6 @@
 # -*- coding: utf-8
 import random
-from test_utils import random_byte, random_bytes
+from test_utils import random_bytes
 
 from bit_manip_utils import byte_assemble, bit_reverse
 from carry_less_multiply import carry_less_multiply

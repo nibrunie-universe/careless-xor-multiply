@@ -3,7 +3,7 @@ from bit_manip_utils import byte_assemble
 from crc_model import CRC32_POLY_BE, crc32_be
 from carry_less_multiply import carry_less_divide, carry_less_multiply
 import random
-from test_utils import random_byte, random_bytes
+from test_utils import random_bytes
 
 # computing X^63 / CRC32_POLY_BE
 CRC32_BE_INV = carry_less_divide(1 << 63, (1 << 32) | CRC32_POLY_BE)

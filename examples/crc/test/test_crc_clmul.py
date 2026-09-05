@@ -3,7 +3,7 @@ from crc_intro import crc32_be_clmul
 from crc32_le_clmul import crc32_le_clmul_generic, crc32_le_clmul, crc32c_clmul
 from bit_manip_utils import byte_assemble
 import random
-from test_utils import random_byte, random_bytes
+from test_utils import random_bytes
 
 
 

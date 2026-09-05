@@ -1,5 +1,5 @@
 import random
-from test_utils import random_byte, random_bytes
+from test_utils import random_bytes
 
 from crc_model import crc32_le, CRC32_POLY_LE
 from crc32_le_clmul64 import crc32_le_clmul64, crc32_le_clmul64_v2
