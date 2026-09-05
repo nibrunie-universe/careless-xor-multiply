@@ -1,6 +1,6 @@
 from crc32_be_clmul64 import crc32_be_clmul64_v2
 import random
-from test_utils import random_byte
+from test_utils import random_byte, random_bytes
 
 from bit_manip_utils import byte_assemble
 from carry_less_multiply import carry_less_divide, carry_less_multiply, carry_less_remainder
@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     for _ in range(NUM_TESTS):
         data_len = random.randrange(1, 100)
-        data_bytes = [random_byte() for _ in range(data_len)]
+        data_bytes = random_bytes(data_len)
 
         # First, we compute the reference CRC32_LE value of the single byte data
         ref_crc32_be = crc32_be(0, data_bytes, CRC32_POLY_BE)

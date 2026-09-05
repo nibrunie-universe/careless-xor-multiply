@@ -1,5 +1,5 @@
 import random
-from test_utils import random_byte
+from test_utils import random_byte, random_bytes
 
 from crc_model import crc32_le, CRC32_POLY_LE
 from crc32_le_clmul64 import crc32_le_clmul64, crc32_le_clmul64_v2
@@ -10,7 +10,7 @@ def test_crc32_be_clmul64_random():
 
     NUM_TESTS = 10000
     for _ in range(NUM_TESTS):
-        data_bytes = [random_byte() for _ in range(8)]
+        data_bytes = random_bytes(8)
         assert len(data_bytes) <= 8
         # assembling data, they byte list needs to be reversed, since the first byte the crc32_be considers
         # is actually the one with highest index in the message

@@ -2,7 +2,7 @@ from bit_manip_utils import byte_split
 from crc_model import CRC32C_POLY_LE
 from carry_less_multiply import carry_less_multiply, carry_less_divide
 import random
-from test_utils import random_byte
+from test_utils import random_byte, random_bytes
 
 from bit_manip_utils import bit_reverse, byte_assemble
 from crc_model import CRC32_POLY_LE, crc32_le, crc32c, CRC32C_POLY_LE
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
 
     # Multi-byte data (4 bytes, corresponding to the CRC width)
-    for data_bytes_rev in [[0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_byte() for _ in range(4)]]:
+    for data_bytes_rev in [[0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], random_bytes(4)]:
         data_rev = byte_assemble(data_bytes_rev)
 
         # First, we compute the reference CRC32_LE value of the multi byte data
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     # Multi-byte data (4 bytes, corresponding to the CRC width)
     # FOR CRC32C
-    for data_bytes_rev in [[0, 0, 0, 0], [0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_byte() for _ in range(4)]]:
+    for data_bytes_rev in [[0, 0, 0, 0], [0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], random_bytes(4)]:
         data_rev = byte_assemble(data_bytes_rev)
 
         # First, we compute the reference CRC32_LE value of the multi byte data
@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
     # More agressive CRC32C testing
     NUM_TESTS = 100000
-    for data_bytes_rev in [[random_byte() for _ in range(4)] for _ in range(NUM_TESTS)]:
+    for data_bytes_rev in [random_bytes(4) for _ in range(NUM_TESTS)]:
         data_rev = byte_assemble(data_bytes_rev)
 
         # First, we compute the reference CRC32_LE value of the multi byte data
