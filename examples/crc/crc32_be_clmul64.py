@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 import random
+from test_utils import random_bytes
 
 from bit_manip_utils import byte_assemble
 from carry_less_multiply import carry_less_multiply, carry_less_divide
@@ -90,10 +91,9 @@ if __name__ == "__main__":
         print(f"crc32_be(0x{data:x} / {data_bytes}) = 0x{ref_crc32_be:x} (ref) vs 0x{clmul64_v2_crc32_be:x} (clmul64_v2)")
         assert ref_crc32_be == clmul64_v2_crc32_be
 
-    random_bytes = lambda: random.randrange(256)
 
     # Multi-byte data (8 bytes)
-    for data_bytes in [[0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1], [random_bytes() for _ in range(8)]]:
+    for data_bytes in [[0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1], random_bytes(8)]:
         assert len(data_bytes) <= 8
         # assembling data, they byte list needs to be reversed, since the first byte the crc32_be considers
         # is actually the one with highest index in the message
@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
     NUM_TESTS = 100000
     for _ in range(NUM_TESTS):
-        data_bytes = [random_bytes() for _ in range(8)]
+        data_bytes = random_bytes(8)
         assert len(data_bytes) <= 8
         # assembling data, they byte list needs to be reversed, since the first byte the crc32_be considers
         # is actually the one with highest index in the message

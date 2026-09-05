@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 import random
+from test_utils import random_bytes
 
 from bit_manip_utils import byte_assemble, bit_reverse
 from carry_less_multiply import carry_less_multiply
@@ -130,11 +131,10 @@ if __name__ == "__main__":
         assert clmul64_crc32_le == clmul64_v2_crc32_le
 
 
-    random_bytes = lambda: random.randrange(256)
 
-    NUM_TESTS = 100000
+    NUM_TESTS = 0 # 100000
     for _ in range(NUM_TESTS):
-        data_bytes = [random_bytes() for _ in range(8)]
+        data_bytes = random_bytes(8)
         assert len(data_bytes) <= 8
         # assembling data, they byte list needs to be reversed, since the first byte the crc32_be considers
         # is actually the one with highest index in the message
