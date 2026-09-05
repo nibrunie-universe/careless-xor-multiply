@@ -3,9 +3,9 @@ from crc_intro import crc32_be_clmul
 from crc32_le_clmul import crc32_le_clmul_generic, crc32_le_clmul, crc32c_clmul
 from bit_manip_utils import byte_assemble
 import random
+from test_utils import random_byte
 
 
-random_bytes = lambda: random.randrange(256)
 
 def test_crc32_be_clmul_sanity():
     # Single byte data
@@ -20,7 +20,7 @@ def test_crc32_be_clmul_sanity():
 
 def test_crc32_be_clmul_extended():
     # Multi-byte data (4 bytes, corresponding to the CRC width)
-    for data_bytes in [[0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_bytes() for _ in range(4)]]:
+    for data_bytes in [[0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_byte() for _ in range(4)]]:
         assert len(data_bytes) <= 4
         # assembling data, they byte list needs to be reversed, since the first byte the crc32_be considers
         # is actually the one with highest index in the message
@@ -46,7 +46,7 @@ def test_crc32_le_clmul_sanity():
 
 def test_crc32_le_clmul_random():
     # Multi-byte data (4 bytes, corresponding to the CRC width)
-    for data_bytes_rev in [[0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_bytes() for _ in range(4)]]:
+    for data_bytes_rev in [[0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_byte() for _ in range(4)]]:
         data_rev = byte_assemble(data_bytes_rev)
 
         # First, we compute the reference CRC32_LE value of the multi byte data
@@ -59,7 +59,7 @@ def test_crc32_le_clmul_random():
 def test_crc32c_clmul_random():
     # Multi-byte data (4 bytes, corresponding to the CRC width)
     # FOR CRC32C
-    for data_bytes_rev in [[0, 0, 0, 0], [0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_bytes() for _ in range(4)]]:
+    for data_bytes_rev in [[0, 0, 0, 0], [0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_byte() for _ in range(4)]]:
         data_rev = byte_assemble(data_bytes_rev)
 
         # First, we compute the reference CRC32_LE value of the multi byte data
@@ -75,7 +75,7 @@ def test_crc32c_clmul_random():
 def test_crc32c_clmul_extended():
     # More agressive CRC32C testing
     NUM_TESTS = 1000
-    for data_bytes_rev in [[random_bytes() for _ in range(4)] for _ in range(NUM_TESTS)]:
+    for data_bytes_rev in [[random_byte() for _ in range(4)] for _ in range(NUM_TESTS)]:
         data_rev = byte_assemble(data_bytes_rev)
 
         # First, we compute the reference CRC32_LE value of the multi byte data

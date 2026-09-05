@@ -3,6 +3,7 @@ from bit_manip_utils import byte_assemble
 from crc_model import CRC32_POLY_BE, crc32_be
 from carry_less_multiply import carry_less_divide, carry_less_multiply
 import random
+from test_utils import random_byte
 
 # computing X^63 / CRC32_POLY_BE
 CRC32_BE_INV = carry_less_divide(1 << 63, (1 << 32) | CRC32_POLY_BE)
@@ -58,10 +59,9 @@ if __name__ == "__main__":
         assert ref_crc32_be == clmul_crc32_be
 
 
-    random_bytes = lambda: random.randrange(256)
 
     # Multi-byte data (4 bytes, corresponding to the CRC width)
-    for data_bytes in [[0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_bytes() for _ in range(4)]]:
+    for data_bytes in [[0x0, 0x0, 0x0, 0x1], [0x1, 0x0, 0x0, 0x0], [random_byte() for _ in range(4)]]:
         assert len(data_bytes) <= 4
         # assembling data, they byte list needs to be reversed, since the first byte the crc32_be considers
         # is actually the one with highest index in the message
